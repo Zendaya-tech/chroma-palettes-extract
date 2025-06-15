@@ -157,12 +157,13 @@ const Index = () => {
 
   return (
     <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8 min-h-screen flex flex-col">
-      <header className="mb-10 text-left">
-        <h1 className="text-4xl font-bold tracking-tight lg:text-5xl text-left flex items-center gap-3">
-          🎨 Générateur de Palette
+      <header className="mb-12 text-center">
+        <h1 className="text-5xl font-extrabold tracking-tighter lg:text-6xl flex items-center justify-center gap-4">
+          <span className="text-6xl">🎨</span>
+          <span>Générateur de Palette</span>
         </h1>
-        <p className="text-muted-foreground mt-2 text-lg">
-          Créez, sauvegardez et partagez de superbes palettes de couleurs.
+        <p className="text-muted-foreground mt-4 text-xl max-w-2xl mx-auto">
+          L'outil ultime pour créer, gérer et exporter vos palettes de couleurs.
         </p>
       </header>
       
