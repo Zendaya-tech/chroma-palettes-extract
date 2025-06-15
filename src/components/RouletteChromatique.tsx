@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Palette, RefreshCw, X as XIcon, Copy as CopyIcon, Plus as PlusIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,35 +28,41 @@ export default function RouletteChromatique({
   onColorPick?: (color: string) => void;
 }) {
   const [angle, setAngle] = useState(0);
+  const [saturation, setSaturation] = useState(100);
   const [lightness, setLightness] = useState(50);
   // Stocker la palette personnalisée de l’utilisateur
   const [palette, setPalette] = useState<string[]>([]);
 
   // Calcul des couleurs principales et complémentaires
-  const current = hslToHex(angle, 100, lightness);
+  const current = hslToHex(angle, saturation, lightness);
   const complementaryAngle = (angle + COMPLEMENTARY_OFFSET) % 360;
-  const complementary = hslToHex(complementaryAngle, 100, lightness);
+  const complementary = hslToHex(complementaryAngle, saturation, lightness);
 
   const svgRef = useRef<SVGSVGElement>(null);
 
-  function handleMove(e: React.MouseEvent) {
+  function handleMove(e: React.PointerEvent<SVGSVGElement>) {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const x =
-      (e.clientX || (e as any).touches?.[0].clientX) - rect.left - CENTER;
-    const y =
-      (e.clientY || (e as any).touches?.[0].clientY) - rect.top - CENTER;
+    const x = e.clientX - rect.left - CENTER;
+    const y = e.clientY - rect.top - CENTER;
+
+    let distance = Math.sqrt(x * x + y * y);
+    distance = Math.min(distance, RADIUS);
+
+    const newSaturation = (distance / RADIUS) * 100;
+    setSaturation(newSaturation);
+
     let theta = Math.atan2(y, x);
     if (theta < 0) theta += 2 * Math.PI;
     const deg = (theta * 180) / Math.PI;
     setAngle(deg);
-    onColorPick?.(hslToHex(deg, 100, lightness));
+    onColorPick?.(hslToHex(deg, newSaturation, lightness));
   }
 
   function handleLightnessChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = Number(e.target.value);
     setLightness(val);
-    onColorPick?.(hslToHex(angle, 100, val));
+    onColorPick?.(hslToHex(angle, saturation, val));
   }
 
   // Palette : ajouter une couleur si elle n’y est pas déjà (max 8 couleurs pour rester simple UI)
@@ -148,6 +153,9 @@ export default function RouletteChromatique({
     };
   }
 
+  const centerColor = hslToHex(0, 0, lightness);
+  const cursorRadius = (saturation / 100) * RADIUS;
+
   return (
     <div className="flex flex-col items-center animate-fade-in w-full">
       <div className="mb-4 flex items-center gap-2">
@@ -163,26 +171,33 @@ export default function RouletteChromatique({
         style={{ touchAction: "none", cursor: "crosshair" }}
         onPointerDown={handleMove}
         onPointerMove={(e) => {
-          if ((e.buttons & 1) === 1) handleMove(e as any);
+          if ((e.buttons & 1) === 1) handleMove(e);
         }}
         className="shadow-xl border bg-card rounded-full"
       >
+        <defs>
+          <radialGradient id="saturation-gradient">
+            <stop offset="0%" stopColor={centerColor} />
+            <stop offset="100%" stopColor={centerColor} stopOpacity="0" />
+          </radialGradient>
+        </defs>
         <g>{slices}</g>
+        <circle cx={CENTER} cy={CENTER} r={RADIUS} fill="url(#saturation-gradient)" />
         {/* curseur */}
         <circle
           cx={
             CENTER +
-            RADIUS *
+            cursorRadius *
               Math.cos(((angle - 90) * Math.PI) / 180)
           }
           cy={
             CENTER +
-            RADIUS *
+            cursorRadius *
               Math.sin(((angle - 90) * Math.PI) / 180)
           }
           r={10}
-          fill="#fff"
-          stroke="#000"
+          fill="none"
+          stroke={lightness < 50 ? "#fff" : "#000"}
           strokeWidth={2}
         />
       </svg>
