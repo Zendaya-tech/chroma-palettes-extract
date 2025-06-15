@@ -1,8 +1,10 @@
 
 import React, { useState, useRef } from "react";
-import { Palette } from "lucide-react";
+import { Palette, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// La constante d’offset pour la complémentaire en degrés
+const COMPLEMENTARY_OFFSET = 180;
 const RADIUS = 110;
 const CENTER = RADIUS + 6;
 
@@ -28,9 +30,11 @@ export default function RouletteChromatique({
   const [angle, setAngle] = useState(0);
   const [lightness, setLightness] = useState(50);
 
-  const [current, setCurrent] = useState(
-    hslToHex(angle, 100, lightness)
-  );
+  // Calcul des couleurs principales et complémentaires
+  const current = hslToHex(angle, 100, lightness);
+  const complementaryAngle = (angle + COMPLEMENTARY_OFFSET) % 360;
+  const complementary = hslToHex(complementaryAngle, 100, lightness);
+
   const svgRef = useRef<SVGSVGElement>(null);
 
   function handleMove(e: React.MouseEvent) {
@@ -44,17 +48,13 @@ export default function RouletteChromatique({
     if (theta < 0) theta += 2 * Math.PI;
     const deg = (theta * 180) / Math.PI;
     setAngle(deg);
-    const hex = hslToHex(deg, 100, lightness);
-    setCurrent(hex);
-    onColorPick?.(hex);
+    onColorPick?.(hslToHex(deg, 100, lightness));
   }
 
   function handleLightnessChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = Number(e.target.value);
     setLightness(val);
-    const hex = hslToHex(angle, 100, val);
-    setCurrent(hex);
-    onColorPick?.(hex);
+    onColorPick?.(hslToHex(angle, 100, val));
   }
 
   // SVG segments for chromatic wheel (48 gradients in a circle)
@@ -175,6 +175,39 @@ export default function RouletteChromatique({
           {current}
         </span>
       </div>
+
+      <div className="flex flex-col items-center gap-2 mt-5 mb-2 w-full">
+        <span className="text-sm text-muted-foreground">Couleur complémentaire</span>
+        <div className="flex gap-3 items-center">
+          <div
+            className="rounded px-3 py-2 text-xs font-mono border select-all hover-scale shadow"
+            style={{
+              backgroundColor: complementary,
+              color: lightness < 50 ? "#fff" : "#222",
+              borderColor: "#bbb",
+              minWidth: 72,
+              textAlign: "center"
+            }}
+            title="Copier la couleur complémentaire"
+            onClick={() => navigator.clipboard.writeText(complementary)}
+          >
+            {complementary}
+          </div>
+          <button
+            className={cn(
+              "ml-2 rounded-full p-2 bg-muted hover:bg-accent border shadow transition"
+            )}
+            title="Mettre la couleur complémentaire sur la roue"
+            onClick={() => {
+              setAngle(complementaryAngle);
+              onColorPick?.(complementary);
+            }}
+          >
+            <RefreshCw size={16} />
+          </button>
+        </div>
+      </div>
+
       <button
         className={cn(
           "mt-4 px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground shadow hover-scale"
