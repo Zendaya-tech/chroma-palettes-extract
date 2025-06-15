@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { Palette, RefreshCw, X as XIcon, Copy as CopyIcon, Plus as PlusIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 // La constante d’offset pour la complémentaire en degrés
 const COMPLEMENTARY_OFFSET = 180;
@@ -22,6 +23,15 @@ function hslToHex(h: number, s: number, l: number) {
   return `#${f(0)}${f(8)}${f(4)}`;
 }
 
+type Harmony = "complementary" | "analogous" | "triadic" | "split-complementary";
+
+const harmonySchemes: Record<Harmony, { name: string; offsets: number[] }> = {
+  complementary: { name: "Complémentaire", offsets: [180] },
+  analogous: { name: "Analogue", offsets: [-30, 30] },
+  triadic: { name: "Triadique", offsets: [120, 240] },
+  "split-complementary": { name: "Compl. Adjacente", offsets: [150, 210] },
+};
+
 export default function RouletteChromatique({
   onColorPick,
 }: {
@@ -32,11 +42,14 @@ export default function RouletteChromatique({
   const [lightness, setLightness] = useState(50);
   // Stocker la palette personnalisée de l’utilisateur
   const [palette, setPalette] = useState<string[]>([]);
+  const [harmony, setHarmony] = useState<Harmony>("complementary");
 
-  // Calcul des couleurs principales et complémentaires
+  // Calcul des couleurs
   const current = hslToHex(angle, saturation, lightness);
-  const complementaryAngle = (angle + COMPLEMENTARY_OFFSET) % 360;
-  const complementary = hslToHex(complementaryAngle, saturation, lightness);
+  const harmonyColors = harmonySchemes[harmony].offsets.map(offset => {
+      const harmonyAngle = (angle + offset + 360) % 360;
+      return hslToHex(harmonyAngle, saturation, lightness);
+  });
 
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -225,81 +238,82 @@ export default function RouletteChromatique({
       </div>
 
       <div className="flex flex-row gap-4 mt-6 w-full justify-center">
-        <button
-          className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold bg-accent text-accent-foreground shadow hover-scale"
-          )}
+        <Button
           onClick={() => {
             addColorToPalette(current);
           }}
         >
-          <PlusIcon size={16} className="text-primary" />
+          <PlusIcon />
           Ajouter à la palette
-        </button>
-        <button
-          className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground shadow hover-scale"
-          )}
+        </Button>
+        <Button
+          variant="secondary"
           onClick={() => {
             handleCopy(current);
           }}
         >
-          <CopyIcon size={16} />
+          <CopyIcon />
           Copier {current}
-        </button>
+        </Button>
       </div>
 
-      {/* Couleur complémentaire existante */}
-      <div className="flex flex-col items-center gap-2 mt-5 mb-2 w-full">
-        <span className="text-sm text-muted-foreground">Couleur complémentaire</span>
-        <div className="flex gap-3 items-center">
-          <div
-            className="rounded px-3 py-2 text-xs font-mono border select-all hover-scale shadow"
-            style={{
-              backgroundColor: complementary,
-              color: lightness < 50 ? "#fff" : "#222",
-              borderColor: "#bbb",
-              minWidth: 72,
-              textAlign: "center",
-              cursor: "pointer"
-            }}
-            title="Copier la couleur complémentaire"
-            onClick={() => handleCopy(complementary)}
-          >
-            {complementary}
+      {/* Section des harmonies */}
+      <div className="w-full border-t pt-6 mt-6">
+        <div className="w-full flex flex-col items-center gap-3">
+          <span className="text-sm font-medium text-muted-foreground">
+            Choisir une harmonie
+          </span>
+          <div className="flex gap-2 flex-wrap justify-center">
+            {(Object.keys(harmonySchemes) as Harmony[]).map((key) => (
+              <Button
+                key={key}
+                variant={harmony === key ? "default" : "outline"}
+                size="sm"
+                onClick={() => setHarmony(key)}
+              >
+                {harmonySchemes[key].name}
+              </Button>
+            ))}
           </div>
-          <button
-            className={cn(
-              "ml-2 rounded-full p-2 bg-muted hover:bg-accent border shadow transition"
-            )}
-            title="Mettre la couleur complémentaire sur la roue"
-            onClick={() => {
-              setAngle(complementaryAngle);
-              onColorPick?.(complementary);
-            }}
-          >
-            <RefreshCw size={16} />
-          </button>
-          <button
-            className={cn(
-              "ml-2 flex items-center gap-1 px-2 py-1 rounded bg-muted hover:bg-accent border transition text-xs"
-            )}
-            title="Ajouter la couleur complémentaire à la palette"
-            onClick={() => addColorToPalette(complementary)}
-          >
-            <PlusIcon size={13} /> Ajouter
-          </button>
+        </div>
+
+        {/* Affichage des couleurs de l'harmonie */}
+        <div className="flex flex-wrap gap-3 items-center justify-center mt-4">
+          {harmonyColors.map((hex) => (
+            <div key={hex} className="flex items-center gap-2 p-1.5 border rounded-md bg-background shadow-sm">
+              <div
+                className="rounded px-3 py-2 text-xs font-mono select-all"
+                style={{
+                  backgroundColor: hex,
+                  color: lightness < 50 ? "#fff" : "#222",
+                }}
+                title={`Copier la couleur ${hex}`}
+                onClick={() => handleCopy(hex)}
+              >
+                {hex}
+              </div>
+               <Button
+                 variant="ghost"
+                 size="icon"
+                 className="h-7 w-7"
+                 title="Ajouter à la palette"
+                 onClick={() => addColorToPalette(hex)}
+               >
+                 <PlusIcon size={14} />
+               </Button>
+            </div>
+          ))}
         </div>
       </div>
 
       {palette.length > 0 && (
-        <div className="w-full flex flex-col items-center mt-7 mb-1">
-          <span className="font-medium text-md text-muted-foreground mb-2">Votre palette</span>
+        <div className="w-full flex flex-col items-center mt-7 mb-1 border-t pt-6">
+          <span className="font-medium text-md text-muted-foreground mb-3">Votre palette</span>
           <div className="flex flex-wrap gap-3 w-full justify-center">
             {palette.map((hex) => (
               <div
                 key={hex}
-                className="relative flex items-center bg-card border rounded shadow px-2 py-1 group min-w-[68px]"
+                className="relative flex items-center bg-card border rounded-lg shadow-sm px-2 py-1 group min-w-[68px]"
               >
                 <span
                   className="text-xs font-mono px-2 py-1 rounded"
@@ -319,7 +333,7 @@ export default function RouletteChromatique({
                   <CopyIcon size={13} />
                 </button>
                 <button
-                  className="ml-1 p-1 rounded hover:bg-destructive -mr-2"
+                  className="ml-1 p-1 rounded hover:bg-destructive/90 hover:text-destructive-foreground -mr-1"
                   title="Retirer"
                   onClick={() => removeColorFromPalette(hex)}
                 >
