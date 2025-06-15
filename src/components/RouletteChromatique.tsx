@@ -67,9 +67,13 @@ export default function RouletteChromatique({
 
     let theta = Math.atan2(y, x);
     if (theta < 0) theta += 2 * Math.PI;
+    
+    // Corrige le décalage de 90 degrés pour que le curseur suive la souris
     const deg = (theta * 180) / Math.PI;
-    setAngle(deg);
-    onColorPick?.(hslToHex(deg, newSaturation, lightness));
+    const correctedAngle = (deg + 90) % 360;
+
+    setAngle(correctedAngle);
+    onColorPick?.(hslToHex(correctedAngle, newSaturation, lightness));
   }
 
   function handleLightnessChange(e: React.ChangeEvent<HTMLInputElement>) {
