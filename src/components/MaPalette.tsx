@@ -12,7 +12,7 @@ interface MaPaletteProps {
 export default function MaPalette({ palette, onRemove, onCopy }: MaPaletteProps) {
   if (palette.length === 0) {
     return (
-      <div className="w-full text-center p-8 border-2 border-dashed rounded-xl mt-8 animate-fade-in">
+      <div className="w-full text-center p-8 border-2 border-dashed rounded-xl mt-8 animate-in fade-in-0 duration-500">
         <h2 className="text-lg font-semibold text-muted-foreground">Votre palette est vide</h2>
         <p className="text-sm text-muted-foreground mt-2">
           Ajoutez des couleurs depuis la roulette ou l'extracteur d'image.
@@ -22,40 +22,44 @@ export default function MaPalette({ palette, onRemove, onCopy }: MaPaletteProps)
   }
 
   return (
-    <div className="w-full flex flex-col items-center mt-8 animate-fade-in">
-      <h2 className="text-xl font-bold mb-4">Ma Palette</h2>
-      <div className="flex flex-wrap gap-4 w-full justify-center bg-card p-6 rounded-xl shadow-lg">
-        {palette.map((hex) => (
-          <div
-            key={hex}
-            className="relative flex items-center bg-background border rounded-lg shadow-sm px-2 py-1 group min-w-[68px]"
-          >
-            <span
-              className="text-xs font-mono px-2 py-1 rounded"
-              style={{
-                background: hex,
-                color: getContrastColor(hex),
-                textShadow: "0 1px 2px rgba(0,0,0,0.1)",
-              }}
+    <div className="w-full flex flex-col items-center mt-8 animate-in fade-in-0 duration-500">
+      <h2 className="text-2xl font-bold mb-4 tracking-tight">Ma Palette Actuelle</h2>
+      <div className="w-full bg-card p-6 rounded-xl shadow-sm border">
+        <div className="flex flex-wrap gap-3 justify-center">
+          {palette.map((hex) => (
+            <div
+              key={hex}
+              className="relative flex items-center bg-background border rounded-lg shadow-sm group transition-all hover:shadow-md"
             >
-              {hex}
-            </span>
-            <button
-              className="ml-2 p-1 rounded hover:bg-muted"
-              title="Copier"
-              onClick={() => onCopy(hex)}
-            >
-              <CopyIcon size={13} />
-            </button>
-            <button
-              className="ml-1 p-1 rounded hover:bg-destructive/90 hover:text-destructive-foreground"
-              title="Retirer"
-              onClick={() => onRemove(hex)}
-            >
-              <XIcon size={13} />
-            </button>
-          </div>
-        ))}
+              <span
+                className="text-sm font-mono px-3 py-1.5 rounded-l-md"
+                style={{
+                  background: hex,
+                  color: getContrastColor(hex),
+                  textShadow: "0 1px 1px rgba(0,0,0,0.1)",
+                }}
+              >
+                {hex}
+              </span>
+              <div className="flex items-center px-1">
+                <button
+                  className="p-1.5 rounded hover:bg-muted"
+                  title="Copier"
+                  onClick={() => onCopy(hex)}
+                >
+                  <CopyIcon size={14} />
+                </button>
+                <button
+                  className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                  title="Retirer"
+                  onClick={() => onRemove(hex)}
+                >
+                  <XIcon size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

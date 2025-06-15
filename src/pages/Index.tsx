@@ -19,6 +19,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Save as SaveIcon, Import as ImportIcon } from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 const Index = () => {
   const [palette, setPalette] = useState<string[]>([]);
@@ -150,69 +156,82 @@ const Index = () => {
   }
 
   return (
-    <div className="container mx-auto py-10 min-h-screen flex flex-col">
-      <h1 className="text-3xl font-bold mb-10 text-left flex items-center gap-3">
-        🎨 Générateur de Palette de Couleurs
-      </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-6">
-        <div className="bg-card rounded-xl p-8 shadow-lg flex flex-col items-center">
-          <RouletteChromatique onAddColor={addColorToPalette} onCopyColor={handleCopy} />
-        </div>
-        <div className="bg-card rounded-xl p-8 shadow-lg flex flex-col items-center">
-          <ExtractionCouleursImage onAddColor={addColorToPalette} onCopyColor={handleCopy} />
-        </div>
-      </div>
-      <MaPalette palette={palette} onRemove={removeColorFromPalette} onCopy={handleCopy} />
+    <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8 min-h-screen flex flex-col">
+      <header className="mb-10 text-left">
+        <h1 className="text-4xl font-bold tracking-tight lg:text-5xl text-left flex items-center gap-3">
+          🎨 Générateur de Palette
+        </h1>
+        <p className="text-muted-foreground mt-2 text-lg">
+          Créez, sauvegardez et partagez de superbes palettes de couleurs.
+        </p>
+      </header>
       
-      <div className="flex gap-4 mt-4 justify-center">
-        <Button onClick={() => palette.length > 0 ? setIsSaveDialogOpen(true) : toast({ title: "Palette vide", description: "Ajoutez des couleurs avant de sauvegarder.", variant: "destructive" })}>
-            <SaveIcon className="mr-2 h-4 w-4" /> Sauvegarder la palette
-        </Button>
-        <Button variant="outline" onClick={handleImportClick}>
-            <ImportIcon className="mr-2 h-4 w-4" /> Importer une palette
-        </Button>
-        <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleImportPalette}
-            className="hidden"
-            accept="application/json"
-        />
-      </div>
+      <main className="flex-grow">
+        <Tabs defaultValue="roulette" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="roulette">Roulette Chromatique</TabsTrigger>
+            <TabsTrigger value="image">Extraire d'une Image</TabsTrigger>
+          </TabsList>
+          <TabsContent value="roulette" className="bg-card rounded-xl p-6 lg:p-8 shadow-sm border animate-in fade-in-0 duration-500">
+            <RouletteChromatique onAddColor={addColorToPalette} onCopyColor={handleCopy} />
+          </TabsContent>
+          <TabsContent value="image" className="bg-card rounded-xl p-6 lg:p-8 shadow-sm border animate-in fade-in-0 duration-500">
+            <ExtractionCouleursImage onAddColor={addColorToPalette} onCopyColor={handleCopy} />
+          </TabsContent>
+        </Tabs>
 
-      <SavedPalettes palettes={savedPalettes} onLoad={handleLoadPalette} onDelete={handleDeletePalette} onExport={handleExportPalette} />
+        <MaPalette palette={palette} onRemove={removeColorFromPalette} onCopy={handleCopy} />
+      
+        <div className="flex gap-4 mt-8 justify-center">
+          <Button size="lg" onClick={() => palette.length > 0 ? setIsSaveDialogOpen(true) : toast({ title: "Palette vide", description: "Ajoutez des couleurs avant de sauvegarder.", variant: "destructive" })}>
+              <SaveIcon className="mr-2 h-5 w-5" /> Sauvegarder la palette
+          </Button>
+          <Button size="lg" variant="outline" onClick={handleImportClick}>
+              <ImportIcon className="mr-2 h-5 w-5" /> Importer une palette
+          </Button>
+          <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImportPalette}
+              className="hidden"
+              accept="application/json"
+          />
+        </div>
 
-      <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Sauvegarder la palette</DialogTitle>
-            <DialogDescription>
-              Donnez un nom à votre palette actuelle pour la sauvegarder.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Nom
-              </Label>
-              <Input
-                id="name"
-                value={newPaletteName}
-                onChange={(e) => setNewPaletteName(e.target.value)}
-                className="col-span-3"
-                placeholder="Ex: Coucher de soleil"
-                onKeyDown={(e) => e.key === 'Enter' && handleSavePalette()}
-              />
+        <SavedPalettes palettes={savedPalettes} onLoad={handleLoadPalette} onDelete={handleDeletePalette} onExport={handleExportPalette} />
+
+        <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Sauvegarder la palette</DialogTitle>
+              <DialogDescription>
+                Donnez un nom à votre palette actuelle pour la sauvegarder.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Nom
+                </Label>
+                <Input
+                  id="name"
+                  value={newPaletteName}
+                  onChange={(e) => setNewPaletteName(e.target.value)}
+                  className="col-span-3"
+                  placeholder="Ex: Coucher de soleil"
+                  onKeyDown={(e) => e.key === 'Enter' && handleSavePalette()}
+                />
+              </div>
             </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">Annuler</Button>
-            </DialogClose>
-            <Button type="submit" onClick={handleSavePalette}>Sauvegarder</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Annuler</Button>
+              </DialogClose>
+              <Button type="submit" onClick={handleSavePalette}>Sauvegarder</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </main>
     </div>
   );
 };

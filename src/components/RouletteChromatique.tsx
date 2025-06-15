@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Palette, Copy as CopyIcon, Plus as PlusIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -140,10 +139,10 @@ export default function RouletteChromatique({
   const cursorRadius = (saturation / 100) * RADIUS;
 
   return (
-    <div className="flex flex-col items-center animate-fade-in w-full">
-      <div className="mb-4 flex items-center gap-2">
+    <div className="flex flex-col items-center w-full">
+      <div className="mb-4 flex items-center gap-2 self-start">
         <Palette className="text-primary w-6 h-6" />
-        <span className="font-semibold text-lg">Roulette chromatique</span>
+        <h3 className="font-semibold text-lg">Roulette chromatique</h3>
       </div>
       <svg
         ref={svgRef}
