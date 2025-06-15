@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { loadImage, removeBackground } from "@/lib/imageUtils";
 
 interface Couleur {
   hex: string;
@@ -22,19 +25,23 @@ export default function ExtractionCouleursImage({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [palette, setPalette] = useState<Couleur[]>([]);
   const [imgUrl, setImgUrl] = useState<string>();
-  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+  type Status = "idle" | "loading" | "removing-bg" | "done" | "error";
+  const [status, setStatus] = useState<Status>("idle");
   const [colorCount, setColorCount] = useState(6);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
+  const [removeBg, setRemoveBg] = useState(false);
+  const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
 
-  const runExtraction = async (file: File, count: number) => {
+  const runExtraction = async (imageBlob: Blob, count: number) => {
     setStatus("loading");
     try {
-      const pal = await extractImagePalette(file, count);
+      const pal = await extractImagePalette(imageBlob, count);
       setPalette(pal);
       setStatus("done");
     } catch (e) {
       setStatus("error");
       console.error(e);
+      toast({ title: "Erreur d'extraction", description: "Impossible d'analyser l'image.", variant: "destructive" });
     }
   };
 
@@ -42,17 +49,58 @@ export default function ExtractionCouleursImage({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const url = URL.createObjectURL(file);
-    setImgUrl(url);
     setCurrentFile(file);
-    await runExtraction(file, colorCount);
+    setProcessedBlob(null);
+    setImgUrl(URL.createObjectURL(file));
+
+    if (removeBg) {
+      setStatus("removing-bg");
+      try {
+        const imageElement = await loadImage(file);
+        const blobWithoutBg = await removeBackground(imageElement);
+        setProcessedBlob(blobWithoutBg);
+        setImgUrl(URL.createObjectURL(blobWithoutBg));
+        await runExtraction(blobWithoutBg, colorCount);
+      } catch (e) {
+        setStatus("error");
+        console.error(e);
+        toast({ title: "Erreur", description: "La suppression de l'arrière-plan a échoué.", variant: "destructive" });
+      }
+    } else {
+      await runExtraction(file, colorCount);
+    }
   }
 
   const handleColorCountChange = async (value: number[]) => {
     const newCount = value[0];
     setColorCount(newCount);
     if (currentFile) {
-      await runExtraction(currentFile, newCount);
+      const blobToProcess = removeBg && processedBlob ? processedBlob : currentFile;
+      await runExtraction(blobToProcess, newCount);
+    }
+  };
+  
+  const handleRemoveBgChange = async (checked: boolean) => {
+    setRemoveBg(checked);
+    if (currentFile) {
+      if (checked) {
+        setStatus("removing-bg");
+        try {
+          const imageElement = await loadImage(currentFile);
+          const blobWithoutBg = await removeBackground(imageElement);
+          setProcessedBlob(blobWithoutBg);
+          setImgUrl(URL.createObjectURL(blobWithoutBg));
+          await runExtraction(blobWithoutBg, colorCount);
+        } catch (e) {
+          setStatus("error");
+          console.error(e);
+          toast({ title: "Erreur", description: "La suppression de l'arrière-plan a échoué.", variant: "destructive" });
+        }
+      } else {
+        setProcessedBlob(null);
+        setImgUrl(URL.createObjectURL(currentFile));
+        await runExtraction(currentFile, colorCount);
+      }
     }
   };
 
@@ -76,6 +124,11 @@ export default function ExtractionCouleursImage({
           <ImageIcon />
           Importer une image
         </Button>
+        
+        <div className="flex items-center space-x-2">
+          <Switch id="remove-bg" checked={removeBg} onCheckedChange={handleRemoveBgChange} />
+          <Label htmlFor="remove-bg">Supprimer l'arrière-plan (Beta)</Label>
+        </div>
 
         <div className="w-full">
           <label htmlFor="color-count" className="text-sm font-medium text-muted-foreground">
@@ -92,6 +145,9 @@ export default function ExtractionCouleursImage({
           />
         </div>
       </div>
+      {status === "removing-bg" && (
+        <div className="text-xs text-muted-foreground mt-2 animate-pulse">Suppression de l'arrière-plan en cours...</div>
+      )}
       {status === "loading" && (
         <div className="text-xs text-muted-foreground mt-2 animate-pulse">Analyse de l’image…</div>
       )}
