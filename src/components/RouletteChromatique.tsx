@@ -1,7 +1,8 @@
 
 import React, { useState, useRef } from "react";
-import { Palette, RefreshCw } from "lucide-react";
+import { Palette, RefreshCw, X as XIcon, Copy as CopyIcon, Plus as PlusIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 // La constante d’offset pour la complémentaire en degrés
 const COMPLEMENTARY_OFFSET = 180;
@@ -29,6 +30,8 @@ export default function RouletteChromatique({
 }) {
   const [angle, setAngle] = useState(0);
   const [lightness, setLightness] = useState(50);
+  // Stocker la palette personnalisée de l’utilisateur
+  const [palette, setPalette] = useState<string[]>([]);
 
   // Calcul des couleurs principales et complémentaires
   const current = hslToHex(angle, 100, lightness);
@@ -55,6 +58,36 @@ export default function RouletteChromatique({
     const val = Number(e.target.value);
     setLightness(val);
     onColorPick?.(hslToHex(angle, 100, val));
+  }
+
+  // Palette : ajouter une couleur si elle n’y est pas déjà (max 8 couleurs pour rester simple UI)
+  function addColorToPalette(hex: string) {
+    setPalette((pal) => {
+      if (pal.includes(hex)) return pal;
+      if (pal.length >= 8) {
+        toast({
+          title: "Palette pleine",
+          description: "Vous pouvez ajouter jusqu'à 8 couleurs.",
+          variant: "destructive"
+        });
+        return pal;
+      }
+      toast({
+        title: "Couleur ajoutée",
+        description: hex,
+      });
+      return [...pal, hex];
+    });
+  }
+  function removeColorFromPalette(hex: string) {
+    setPalette((pal) => pal.filter((c) => c !== hex));
+  }
+  function handleCopy(hex: string) {
+    navigator.clipboard.writeText(hex);
+    toast({
+      title: "Copié !",
+      description: hex,
+    });
   }
 
   // SVG segments for chromatic wheel (48 gradients in a circle)
@@ -116,7 +149,7 @@ export default function RouletteChromatique({
   }
 
   return (
-    <div className="flex flex-col items-center animate-fade-in">
+    <div className="flex flex-col items-center animate-fade-in w-full">
       <div className="mb-4 flex items-center gap-2">
         <Palette className="text-primary w-6 h-6" />
         <span className="font-semibold text-lg">
@@ -176,6 +209,32 @@ export default function RouletteChromatique({
         </span>
       </div>
 
+      <div className="flex flex-row gap-4 mt-6 w-full justify-center">
+        <button
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold bg-accent text-accent-foreground shadow hover-scale"
+          )}
+          onClick={() => {
+            addColorToPalette(current);
+          }}
+        >
+          <PlusIcon size={16} className="text-primary" />
+          Ajouter à la palette
+        </button>
+        <button
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground shadow hover-scale"
+          )}
+          onClick={() => {
+            handleCopy(current);
+          }}
+        >
+          <CopyIcon size={16} />
+          Copier {current}
+        </button>
+      </div>
+
+      {/* Couleur complémentaire existante */}
       <div className="flex flex-col items-center gap-2 mt-5 mb-2 w-full">
         <span className="text-sm text-muted-foreground">Couleur complémentaire</span>
         <div className="flex gap-3 items-center">
@@ -186,10 +245,11 @@ export default function RouletteChromatique({
               color: lightness < 50 ? "#fff" : "#222",
               borderColor: "#bbb",
               minWidth: 72,
-              textAlign: "center"
+              textAlign: "center",
+              cursor: "pointer"
             }}
             title="Copier la couleur complémentaire"
-            onClick={() => navigator.clipboard.writeText(complementary)}
+            onClick={() => handleCopy(complementary)}
           >
             {complementary}
           </div>
@@ -205,19 +265,56 @@ export default function RouletteChromatique({
           >
             <RefreshCw size={16} />
           </button>
+          <button
+            className={cn(
+              "ml-2 flex items-center gap-1 px-2 py-1 rounded bg-muted hover:bg-accent border transition text-xs"
+            )}
+            title="Ajouter la couleur complémentaire à la palette"
+            onClick={() => addColorToPalette(complementary)}
+          >
+            <PlusIcon size={13} /> Ajouter
+          </button>
         </div>
       </div>
 
-      <button
-        className={cn(
-          "mt-4 px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground shadow hover-scale"
-        )}
-        onClick={() => {
-          navigator.clipboard.writeText(current);
-        }}
-      >
-        Copier {current}
-      </button>
+      {palette.length > 0 && (
+        <div className="w-full flex flex-col items-center mt-7 mb-1">
+          <span className="font-medium text-md text-muted-foreground mb-2">Votre palette</span>
+          <div className="flex flex-wrap gap-3 w-full justify-center">
+            {palette.map((hex) => (
+              <div
+                key={hex}
+                className="relative flex items-center bg-card border rounded shadow px-2 py-1 group min-w-[68px]"
+              >
+                <span
+                  className="text-xs font-mono px-2 py-1 rounded"
+                  style={{
+                    background: hex,
+                    color: hex.toLowerCase() === "#ffffff" ? "#333" : "#fff",
+                    textShadow: "0 1px 4px rgba(0,0,0,0.15)",
+                  }}
+                >
+                  {hex}
+                </span>
+                <button
+                  className="ml-2 p-1 rounded hover:bg-muted"
+                  title="Copier"
+                  onClick={() => handleCopy(hex)}
+                >
+                  <CopyIcon size={13} />
+                </button>
+                <button
+                  className="ml-1 p-1 rounded hover:bg-destructive -mr-2"
+                  title="Retirer"
+                  onClick={() => removeColorFromPalette(hex)}
+                >
+                  <XIcon size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
