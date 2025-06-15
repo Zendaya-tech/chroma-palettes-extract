@@ -153,7 +153,7 @@ export default function RouletteChromatique({
         onPointerMove={(e) => {
           if ((e.buttons & 1) === 1) handleMove(e);
         }}
-        className="shadow-xl border bg-card rounded-full"
+        className="border bg-card rounded-full"
       >
         <defs>
           <radialGradient id="saturation-gradient">

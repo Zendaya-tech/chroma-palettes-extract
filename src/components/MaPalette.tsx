@@ -1,4 +1,3 @@
-
 import React from "react";
 import { X as XIcon, Copy as CopyIcon } from "lucide-react";
 import { getContrastColor } from "@/lib/colorUtils";
@@ -24,12 +23,12 @@ export default function MaPalette({ palette, onRemove, onCopy }: MaPaletteProps)
   return (
     <div className="w-full flex flex-col items-center mt-8 animate-in fade-in-0 duration-500">
       <h2 className="text-2xl font-bold mb-4 tracking-tight">Ma Palette Actuelle</h2>
-      <div className="w-full bg-card p-6 rounded-xl shadow-sm border">
+      <div className="w-full bg-card p-6 rounded-xl border">
         <div className="flex flex-wrap gap-3 justify-center">
           {palette.map((hex) => (
             <div
               key={hex}
-              className="relative flex items-center bg-background border rounded-md shadow-sm group transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+              className="relative flex items-center bg-background border rounded-md group transition-all duration-200 hover:-translate-y-0.5"
             >
               <span
                 className="text-sm font-mono px-3 py-1.5 rounded-l-md"

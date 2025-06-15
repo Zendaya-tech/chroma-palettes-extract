@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import RouletteChromatique from "@/components/RouletteChromatique";
 import ExtractionCouleursImage from "@/components/ExtractionCouleursImage";
@@ -159,7 +158,6 @@ const Index = () => {
     <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8 min-h-screen flex flex-col">
       <header className="mb-12 text-center">
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tighter lg:text-6xl flex items-center justify-center gap-4">
-          <span className="text-5xl sm:text-6xl">🎨</span>
           <span>Générateur de Palette</span>
         </h1>
         <p className="text-muted-foreground mt-4 text-xl max-w-2xl mx-auto">
@@ -173,10 +171,10 @@ const Index = () => {
             <TabsTrigger value="roulette">Roulette Chromatique</TabsTrigger>
             <TabsTrigger value="image">Extraire d'une Image</TabsTrigger>
           </TabsList>
-          <TabsContent value="roulette" className="bg-card rounded-xl p-6 lg:p-8 shadow-sm border animate-in fade-in-0 duration-500">
+          <TabsContent value="roulette" className="bg-card rounded-xl p-6 lg:p-8 border animate-in fade-in-0 duration-500">
             <RouletteChromatique onAddColor={addColorToPalette} onCopyColor={handleCopy} />
           </TabsContent>
-          <TabsContent value="image" className="bg-card rounded-xl p-6 lg:p-8 shadow-sm border animate-in fade-in-0 duration-500">
+          <TabsContent value="image" className="bg-card rounded-xl p-6 lg:p-8 border animate-in fade-in-0 duration-500">
             <ExtractionCouleursImage onAddColor={addColorToPalette} onCopyColor={handleCopy} />
           </TabsContent>
         </Tabs>

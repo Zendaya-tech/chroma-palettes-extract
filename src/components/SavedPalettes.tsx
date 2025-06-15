@@ -40,7 +40,7 @@ export default function SavedPalettes({ palettes, onLoad, onDelete, onExport }: 
       <div className="w-full max-w-4xl mx-auto space-y-4">
         <TooltipProvider>
           {palettes.map((p) => (
-            <div key={p.id} className="bg-card p-4 rounded-xl shadow-sm border transition-all hover:shadow-md">
+            <div key={p.id} className="bg-card p-4 rounded-xl border transition-all hover:bg-accent/50">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
                 <h3 className="font-semibold text-lg">{p.name}</h3>
                 <div className="flex gap-2 items-center self-end sm:self-center">
