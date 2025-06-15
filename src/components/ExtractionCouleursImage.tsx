@@ -1,9 +1,11 @@
 
 import React, { useRef, useState } from "react";
-import { Image as ImageIcon } from "lucide-react";
-import { extractImagePalette } from "@/lib/colorUtils";
+import { Image as ImageIcon, PlusIcon, CopyIcon } from "lucide-react";
+import { extractImagePalette, getContrastColor } from "@/lib/colorUtils";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 interface Couleur {
   hex: string;
@@ -11,9 +13,11 @@ interface Couleur {
 }
 
 export default function ExtractionCouleursImage({
-  onExtracted,
+  onAddColor,
+  onCopyColor,
 }: {
-  onExtracted?: (palette: Couleur[]) => void;
+  onAddColor: (palette: string) => void;
+  onCopyColor: (palette: string) => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [palette, setPalette] = useState<Couleur[]>([]);
@@ -27,7 +31,6 @@ export default function ExtractionCouleursImage({
     try {
       const pal = await extractImagePalette(file, count);
       setPalette(pal);
-      onExtracted?.(pal);
       setStatus("done");
     } catch (e) {
       setStatus("error");
@@ -39,7 +42,6 @@ export default function ExtractionCouleursImage({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Create a new URL only for the new image.
     const url = URL.createObjectURL(file);
     setImgUrl(url);
     setCurrentFile(file);
@@ -96,35 +98,52 @@ export default function ExtractionCouleursImage({
       {imgUrl && (
         <div className="mt-4 flex flex-col items-center">
           <img src={imgUrl} alt="Aperçu" className="max-h-32 rounded shadow mb-2 border" />
-          <div className="flex flex-wrap justify-center gap-2 mt-2">
+          <div className="flex flex-wrap justify-center gap-3 mt-2">
             {palette.map((clr, idx) => (
-              <button
+              <div
+                key={idx}
                 className={cn(
-                  "flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition shadow border rounded-lg p-2 min-w-[64px]"
+                  "relative flex flex-col items-center justify-center shadow border rounded-lg p-2 min-w-[72px] group"
                 )}
                 style={{ backgroundColor: clr.hex }}
-                key={idx}
-                onClick={() => {
-                  navigator.clipboard.writeText(clr.hex);
-                }}
-                title={"Copier " + clr.hex}
               >
                 <div
-                  className="w-6 h-6 rounded-full border mb-1"
+                  className="w-8 h-8 rounded-full border mb-1"
                   style={{
                     background: clr.hex,
-                    borderColor: "#fff",
+                    borderColor: "rgba(255,255,255,0.5)",
                   }}
                 />
                 <span
                   className="text-xs font-mono"
                   style={{
-                    color: chromaContrast(clr.hex) < 3.5 ? "#fff" : "#333",
+                    color: getContrastColor(clr.hex),
+                    textShadow: "0 1px 2px rgba(0,0,0,0.2)",
                   }}
                 >
                   {clr.hex}
                 </span>
-              </button>
+                <div className="absolute top-0 right-0 bottom-0 left-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-white hover:bg-white/20"
+                    title="Ajouter à la palette"
+                    onClick={() => onAddColor(clr.hex)}
+                  >
+                    <PlusIcon size={16} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-white hover:bg-white/20"
+                    title={"Copier " + clr.hex}
+                    onClick={() => onCopyColor(clr.hex)}
+                  >
+                    <CopyIcon size={14} />
+                  </Button>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -134,12 +153,4 @@ export default function ExtractionCouleursImage({
       )}
     </div>
   );
-}
-function chromaContrast(hex: string) {
-  // YIQ contrast
-  hex = hex.replace("#", "");
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
-  return (r * 299 + g * 587 + b * 114) / 1000 / 128;
 }

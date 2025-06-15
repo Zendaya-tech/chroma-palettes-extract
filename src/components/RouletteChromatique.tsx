@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
-import { Palette, RefreshCw, X as XIcon, Copy as CopyIcon, Plus as PlusIcon } from "lucide-react";
+import { Palette, Copy as CopyIcon, Plus as PlusIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { getContrastColor } from "@/lib/colorUtils";
 
 // La constante d’offset pour la complémentaire en degrés
 const COMPLEMENTARY_OFFSET = 180;
@@ -14,8 +14,7 @@ function hslToHex(h: number, s: number, l: number) {
   const a = (s * Math.min(l, 1 - l)) / 100;
   const f = (n: number) => {
     const k = (n + h / 30) % 12;
-    const color =
-      l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
     return Math.round(255 * color)
       .toString(16)
       .padStart(2, "0");
@@ -33,22 +32,22 @@ const harmonySchemes: Record<Harmony, { name: string; offsets: number[] }> = {
 };
 
 export default function RouletteChromatique({
-  onColorPick,
+  onAddColor,
+  onCopyColor,
 }: {
-  onColorPick?: (color: string) => void;
+  onAddColor: (color: string) => void;
+  onCopyColor: (color: string) => void;
 }) {
   const [angle, setAngle] = useState(0);
   const [saturation, setSaturation] = useState(100);
   const [lightness, setLightness] = useState(50);
-  // Stocker la palette personnalisée de l’utilisateur
-  const [palette, setPalette] = useState<string[]>([]);
   const [harmony, setHarmony] = useState<Harmony>("complementary");
 
   // Calcul des couleurs
   const current = hslToHex(angle, saturation, lightness);
-  const harmonyColors = harmonySchemes[harmony].offsets.map(offset => {
-      const harmonyAngle = (angle + offset + 360) % 360;
-      return hslToHex(harmonyAngle, saturation, lightness);
+  const harmonyColors = harmonySchemes[harmony].offsets.map((offset) => {
+    const harmonyAngle = (angle + offset + 360) % 360;
+    return hslToHex(harmonyAngle, saturation, lightness);
   });
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -67,52 +66,18 @@ export default function RouletteChromatique({
 
     let theta = Math.atan2(y, x);
     if (theta < 0) theta += 2 * Math.PI;
-    
-    // Corrige le décalage de 90 degrés pour que le curseur suive la souris
+
     const deg = (theta * 180) / Math.PI;
     const correctedAngle = (deg + 90) % 360;
 
     setAngle(correctedAngle);
-    onColorPick?.(hslToHex(correctedAngle, newSaturation, lightness));
   }
 
   function handleLightnessChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = Number(e.target.value);
     setLightness(val);
-    onColorPick?.(hslToHex(angle, saturation, val));
   }
 
-  // Palette : ajouter une couleur si elle n’y est pas déjà (max 8 couleurs pour rester simple UI)
-  function addColorToPalette(hex: string) {
-    setPalette((pal) => {
-      if (pal.includes(hex)) return pal;
-      if (pal.length >= 8) {
-        toast({
-          title: "Palette pleine",
-          description: "Vous pouvez ajouter jusqu'à 8 couleurs.",
-          variant: "destructive"
-        });
-        return pal;
-      }
-      toast({
-        title: "Couleur ajoutée",
-        description: hex,
-      });
-      return [...pal, hex];
-    });
-  }
-  function removeColorFromPalette(hex: string) {
-    setPalette((pal) => pal.filter((c) => c !== hex));
-  }
-  function handleCopy(hex: string) {
-    navigator.clipboard.writeText(hex);
-    toast({
-      title: "Copié !",
-      description: hex,
-    });
-  }
-
-  // SVG segments for chromatic wheel (48 gradients in a circle)
   const slices = Array.from({ length: 48 }).map((_, i) => {
     const start = (360 / 48) * i;
     const end = start + 360 / 48;
@@ -177,9 +142,7 @@ export default function RouletteChromatique({
     <div className="flex flex-col items-center animate-fade-in w-full">
       <div className="mb-4 flex items-center gap-2">
         <Palette className="text-primary w-6 h-6" />
-        <span className="font-semibold text-lg">
-          Roulette chromatique
-        </span>
+        <span className="font-semibold text-lg">Roulette chromatique</span>
       </div>
       <svg
         ref={svgRef}
@@ -202,19 +165,11 @@ export default function RouletteChromatique({
         <circle cx={CENTER} cy={CENTER} r={RADIUS} fill="url(#saturation-gradient)" />
         {/* curseur */}
         <circle
-          cx={
-            CENTER +
-            cursorRadius *
-              Math.cos(((angle - 90) * Math.PI) / 180)
-          }
-          cy={
-            CENTER +
-            cursorRadius *
-              Math.sin(((angle - 90) * Math.PI) / 180)
-          }
+          cx={CENTER + cursorRadius * Math.cos(((angle - 90) * Math.PI) / 180)}
+          cy={CENTER + cursorRadius * Math.sin(((angle - 90) * Math.PI) / 180)}
           r={10}
           fill="none"
-          stroke={lightness < 50 ? "#fff" : "#000"}
+          stroke={getContrastColor(current)}
           strokeWidth={2}
         />
       </svg>
@@ -233,7 +188,7 @@ export default function RouletteChromatique({
           className="rounded px-3 py-2 text-xs font-mono border ml-4 select-all hover-scale"
           style={{
             backgroundColor: current,
-            color: lightness < 50 ? "#fff" : "#222",
+            color: getContrastColor(current),
             borderColor: "#bbb",
           }}
         >
@@ -244,7 +199,7 @@ export default function RouletteChromatique({
       <div className="flex flex-row gap-4 mt-6 w-full justify-center">
         <Button
           onClick={() => {
-            addColorToPalette(current);
+            onAddColor(current);
           }}
         >
           <PlusIcon />
@@ -253,7 +208,7 @@ export default function RouletteChromatique({
         <Button
           variant="secondary"
           onClick={() => {
-            handleCopy(current);
+            onCopyColor(current);
           }}
         >
           <CopyIcon />
@@ -264,9 +219,7 @@ export default function RouletteChromatique({
       {/* Section des harmonies */}
       <div className="w-full border-t pt-6 mt-6">
         <div className="w-full flex flex-col items-center gap-3">
-          <span className="text-sm font-medium text-muted-foreground">
-            Choisir une harmonie
-          </span>
+          <span className="text-sm font-medium text-muted-foreground">Choisir une harmonie</span>
           <div className="flex gap-2 flex-wrap justify-center">
             {(Object.keys(harmonySchemes) as Harmony[]).map((key) => (
               <Button
@@ -284,70 +237,60 @@ export default function RouletteChromatique({
         {/* Affichage des couleurs de l'harmonie */}
         <div className="flex flex-wrap gap-3 items-center justify-center mt-4">
           {harmonyColors.map((hex) => (
-            <div key={hex} className="flex items-center gap-2 p-1.5 border rounded-md bg-background shadow-sm">
+            <div
+              key={hex}
+              className="flex items-center gap-2 p-1.5 border rounded-md bg-background shadow-sm"
+            >
               <div
-                className="rounded px-3 py-2 text-xs font-mono select-all"
+                className="rounded px-3 py-2 text-xs font-mono select-all cursor-pointer"
                 style={{
                   backgroundColor: hex,
-                  color: lightness < 50 ? "#fff" : "#222",
+                  color: getContrastColor(hex),
                 }}
                 title={`Copier la couleur ${hex}`}
-                onClick={() => handleCopy(hex)}
+                onClick={() => onCopyColor(hex)}
               >
                 {hex}
               </div>
-               <Button
-                 variant="ghost"
-                 size="icon"
-                 className="h-7 w-7"
-                 title="Ajouter à la palette"
-                 onClick={() => addColorToPalette(hex)}
-               >
-                 <PlusIcon size={14} />
-               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                title="Ajouter à la palette"
+                onClick={() => onAddColor(hex)}
+              >
+                <PlusIcon size={14} />
+              </Button>
             </div>
           ))}
         </div>
       </div>
-
-      {palette.length > 0 && (
-        <div className="w-full flex flex-col items-center mt-7 mb-1 border-t pt-6">
-          <span className="font-medium text-md text-muted-foreground mb-3">Votre palette</span>
-          <div className="flex flex-wrap gap-3 w-full justify-center">
-            {palette.map((hex) => (
-              <div
-                key={hex}
-                className="relative flex items-center bg-card border rounded-lg shadow-sm px-2 py-1 group min-w-[68px]"
-              >
-                <span
-                  className="text-xs font-mono px-2 py-1 rounded"
-                  style={{
-                    background: hex,
-                    color: hex.toLowerCase() === "#ffffff" ? "#333" : "#fff",
-                    textShadow: "0 1px 4px rgba(0,0,0,0.15)",
-                  }}
-                >
-                  {hex}
-                </span>
-                <button
-                  className="ml-2 p-1 rounded hover:bg-muted"
-                  title="Copier"
-                  onClick={() => handleCopy(hex)}
-                >
-                  <CopyIcon size={13} />
-                </button>
-                <button
-                  className="ml-1 p-1 rounded hover:bg-destructive/90 hover:text-destructive-foreground -mr-1"
-                  title="Retirer"
-                  onClick={() => removeColorFromPalette(hex)}
-                >
-                  <XIcon size={13} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+
+const COMPLEMENTARY_OFFSET = 180;
+const RADIUS = 110;
+const CENTER = RADIUS + 6;
+
+function hslToHex(h: number, s: number, l: number) {
+  l /= 100;
+  const a = (s * Math.min(l, 1 - l)) / 100;
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color)
+      .toString(16)
+      .padStart(2, "0");
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+type Harmony = "complementary" | "analogous" | "triadic" | "split-complementary";
+
+const harmonySchemes: Record<Harmony, { name: string; offsets: number[] }> = {
+  complementary: { name: "Complémentaire", offsets: [180] },
+  analogous: { name: "Analogue", offsets: [-30, 30] },
+  triadic: { name: "Triadique", offsets: [120, 240] },
+  "split-complementary": { name: "Compl. Adjacente", offsets: [150, 210] },
+};

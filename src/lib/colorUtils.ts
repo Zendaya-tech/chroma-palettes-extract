@@ -1,4 +1,3 @@
-
 /**
  * Utilitaire pour extraire une palette de couleurs principale d'une image (client-side).
  * Similaire à ColorThief/tinycolor, mais ultra-simple pour la démo.
@@ -60,4 +59,22 @@ export function rgbToHex(r: number, g: number, b: number): string {
       return hex.length === 1 ? "0" + hex : hex;
     }).join("")
   );
+}
+
+export function getContrastColor(hex: string): string {
+  if (!hex) return "#000000";
+  hex = hex.replace("#", "");
+  if (hex.length === 3) {
+    hex = hex
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  }
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  // Formule de la luminance relative (YIQ)
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 128 ? "#000000" : "#ffffff";
 }
