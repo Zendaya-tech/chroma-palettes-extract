@@ -29,7 +29,7 @@ export default function MaPalette({ palette, onRemove, onCopy }: MaPaletteProps)
           {palette.map((hex) => (
             <div
               key={hex}
-              className="relative flex items-center bg-background border rounded-lg shadow-sm group transition-all hover:shadow-md"
+              className="relative flex items-center bg-background border rounded-md shadow-sm group transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
             >
               <span
                 className="text-sm font-mono px-3 py-1.5 rounded-l-md"
