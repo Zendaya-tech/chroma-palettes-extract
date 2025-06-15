@@ -17,7 +17,7 @@ const HowToUse = () => {
   return (
     <div className="container mx-auto max-w-4xl py-10 px-4">
       <header className="mb-10 text-center">
-        <h1 className="text-4xl font-bold tracking-tight">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
           Comment utiliser Chroma Palettes
         </h1>
         <p className="mt-2 text-lg text-muted-foreground">

@@ -158,8 +158,8 @@ const Index = () => {
   return (
     <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8 min-h-screen flex flex-col">
       <header className="mb-12 text-center">
-        <h1 className="text-5xl font-extrabold tracking-tighter lg:text-6xl flex items-center justify-center gap-4">
-          <span className="text-6xl">🎨</span>
+        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tighter lg:text-6xl flex items-center justify-center gap-4">
+          <span className="text-5xl sm:text-6xl">🎨</span>
           <span>Générateur de Palette</span>
         </h1>
         <p className="text-muted-foreground mt-4 text-xl max-w-2xl mx-auto">
@@ -183,7 +183,7 @@ const Index = () => {
 
         <MaPalette palette={palette} onRemove={removeColorFromPalette} onCopy={handleCopy} />
       
-        <div className="flex gap-4 mt-8 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 mt-8 justify-center">
           <Button size="lg" onClick={() => palette.length > 0 ? setIsSaveDialogOpen(true) : toast({ title: "Palette vide", description: "Ajoutez des couleurs avant de sauvegarder.", variant: "destructive" })}>
               <SaveIcon className="mr-2 h-5 w-5" /> Sauvegarder la palette
           </Button>
