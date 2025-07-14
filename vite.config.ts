@@ -16,6 +16,11 @@ export default defineConfig(({ mode }) => ({
     mode === 'development' &&
     componentTagger(),
     VitePWA({
+
+      workbox: {
+        maximumFileSizeToCacheInBytes: 30 * 1024 * 1024 // Example: 5 MiB
+        // Or a larger value if needed, e.g., 10 * 1024 * 1024 for 10 MiB
+      },
       registerType: 'autoUpdate',
       manifest: {
         name: 'Chroma Palettes',
