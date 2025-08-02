@@ -1,6 +1,8 @@
 import React, { useState, useRef } from "react";
 import RouletteChromatique from "@/components/RouletteChromatique";
 import ExtractionCouleursImage from "@/components/ExtractionCouleursImage";
+import ColorFormatConverter from "@/components/ColorFormatConverter";
+import GradientGenerator from "@/components/GradientGenerator";
 import MaPalette from "@/components/MaPalette";
 import { toast } from "@/hooks/use-toast";
 import SavedPalettes, { SavedPalette } from "@/components/SavedPalettes";
@@ -167,15 +169,23 @@ const Index = () => {
       
       <main className="flex-grow">
         <Tabs defaultValue="roulette" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="roulette">Roulette Chromatique</TabsTrigger>
-            <TabsTrigger value="image">Extraire d'une Image</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="roulette">Roulette</TabsTrigger>
+            <TabsTrigger value="image">Image</TabsTrigger>
+            <TabsTrigger value="converter">Formats</TabsTrigger>
+            <TabsTrigger value="gradient">Dégradés</TabsTrigger>
           </TabsList>
           <TabsContent value="roulette" className="bg-card rounded-xl p-6 lg:p-8 border animate-in fade-in-0 duration-500">
             <RouletteChromatique onAddColor={addColorToPalette} onCopyColor={handleCopy} />
           </TabsContent>
           <TabsContent value="image" className="bg-card rounded-xl p-6 lg:p-8 border animate-in fade-in-0 duration-500">
             <ExtractionCouleursImage onAddColor={addColorToPalette} onCopyColor={handleCopy} />
+          </TabsContent>
+          <TabsContent value="converter" className="bg-card rounded-xl p-6 lg:p-8 border animate-in fade-in-0 duration-500">
+            <ColorFormatConverter onAddColor={addColorToPalette} />
+          </TabsContent>
+          <TabsContent value="gradient" className="bg-card rounded-xl p-6 lg:p-8 border animate-in fade-in-0 duration-500">
+            <GradientGenerator palette={palette} onAddColor={addColorToPalette} />
           </TabsContent>
         </Tabs>
 

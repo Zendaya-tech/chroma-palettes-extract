@@ -28,10 +28,10 @@ export default function MaPalette({ palette, onRemove, onCopy }: MaPaletteProps)
           {palette.map((hex) => (
             <div
               key={hex}
-              className="relative flex items-center bg-background border rounded-md group transition-all duration-200 hover:-translate-y-0.5"
+              className="relative flex items-center bg-background border rounded-md group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/20"
             >
               <span
-                className="text-sm font-mono px-3 py-1.5 rounded-l-md"
+                className="text-sm font-mono px-3 py-1.5 rounded-l-md transition-all duration-200"
                 style={{
                   background: hex,
                   color: getContrastColor(hex),
@@ -42,14 +42,14 @@ export default function MaPalette({ palette, onRemove, onCopy }: MaPaletteProps)
               </span>
               <div className="flex items-center px-1">
                 <button
-                  className="p-1.5 rounded hover:bg-muted"
+                  className="p-1.5 rounded hover:bg-muted transition-colors duration-200"
                   title="Copier"
                   onClick={() => onCopy(hex)}
                 >
                   <CopyIcon size={14} />
                 </button>
                 <button
-                  className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                  className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors duration-200"
                   title="Retirer"
                   onClick={() => onRemove(hex)}
                 >
